@@ -1,0 +1,10 @@
+google.com
+googleapis.com
+googleusercontent.com
+googlesource.com
+googlevideo.com
+youtube.com
+ytimg.com
+ggpht.com
+gstatic.com
+wikipedia.org
