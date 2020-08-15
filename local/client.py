@@ -1,4 +1,5 @@
 import json
+import os
 import socket
 import sys
 import time
@@ -12,11 +13,13 @@ class ProxyClinet(object):
     def __init__(self):
         self.load_config()
         self.load_hosts()
+        self.check_logdir()
+        self.append_log('client start')
 
     def load_config(self):
-        with open('config.json', 'r') as f:
+        with open('client.config', 'r') as f:
             config = json.load(f)
-        self.server_port = config['server_port']
+        self.local_port = config['local_port']
         self.all_to_vps = config['all_to_vps']
         self.vpss = config['vpss']
 
@@ -26,8 +29,12 @@ class ProxyClinet(object):
             for host in f:
                 self.proxy_hosts.append(host.strip())
 
+    def check_logdir(self):
+        if not os.path.exists('log'):
+            os.mkdir('log')
+
     def run(self):
-        set_proxy_config(self.server_port)
+        set_proxy_config(self.local_port)
         back_config = Thread(target=self.back_proxy_setting)
         back_config.setDaemon(True)
         back_config.start()
@@ -51,7 +58,7 @@ class ProxyClinet(object):
 
     def run_listen(self):
         listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        listener.bind(('localhost', self.server_port))
+        listener.bind(('localhost', self.local_port))
         listener.listen(20)
 
         while True:
@@ -63,6 +70,9 @@ class ProxyClinet(object):
 
     def app_run(self, app):
         req = app.recv(4096)
+        if len(req) == 0:
+            app.close()
+            return
         host_addr = self.parse_addr(req.decode())
 
         if not host_addr:
@@ -74,7 +84,7 @@ class ProxyClinet(object):
         req_by_vps = bool(self.all_to_vps)
         if not req_by_vps:
             for ph in self.proxy_hosts:
-                if host.find(ph) >= 0:
+                if host.find(ph) > -1:
                     req_by_vps = True
                     self.append_log('req {0} by vps'.format(host))
                     break
@@ -86,18 +96,19 @@ class ProxyClinet(object):
                 return
             self.connect_bridge(app, proxy, port, req)
         else:
-            local = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            if local.connect_ex((host, port)) == 0:
-                self.connect_bridge(app, local, port, req)
-            else:
-                with open('proxy_hosts.txt', 'a') as f:
-                    f.write('\n{0}'.format(host))
-                self.proxy_hosts.append(host)
-                proxy = self.connect_proxy(host_addr)
-                if not proxy:
-                    self.append_log('connect proxy failed')
-                    return
-                self.connect_bridge(app, proxy, port, req)
+            try:
+                local = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                if local.connect_ex((host, port)) == 0:
+                    self.connect_bridge(app, local, port, req)
+                else:
+                    proxy = self.connect_proxy(host_addr)
+                    if not proxy:
+                        self.append_log('connect proxy failed')
+                        return
+                    self.connect_bridge(app, proxy, port, req)
+                    self.append_proxy_hosts(host)
+            except:
+                self.append_log('get address failed => {0}'.format(host_addr))
 
     def parse_addr(self, req):
         try:
@@ -173,10 +184,20 @@ class ProxyClinet(object):
             recver.close()
             sender.close()
 
+    def append_proxy_hosts(self, host):
+        host_items = host.split('.')
+        host = '.'.join(host_items[-2:])
+        try:
+            self.proxy_hosts.index(host)
+        except:
+            self.proxy_hosts.append(host)
+            with open('proxy_hosts.txt', 'a') as f:
+                f.write('\n{0}'.format(host))
+
     def append_log(self, msg, func_name=''):
         dt = str(datetime.now())
         with open('log/{0}_proxy.log'.format(dt[0:10]), 'a') as f:
-            f.write('{0} |S| {1} | {2} \n'.format(dt, str(msg), func_name))
+            f.write('{0} | {1} | {2} \n'.format(dt, str(msg), func_name))
 
 
 if __name__ == "__main__":
