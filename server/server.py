@@ -19,6 +19,7 @@ class ProxyServer(object):
         self.v4_port = config['v4_port']
         self.v6_port = config['v6_port']
         self.token = config['token'].encode()
+        self.log_open = bool(config['log_open'])
 
     def check_logdir(self):
         if not os.path.exists('log'):
@@ -59,7 +60,7 @@ class ProxyServer(object):
 
     def app_run(self, app, addr):
         if self.check_token(app, addr):
-            host_addr = app.recv(1024).decode()
+            host_addr = app.recv(4096).decode()
             host = host_addr.split(':')[0]
             port = int(host_addr.split(':')[1])
             try:
@@ -69,18 +70,25 @@ class ProxyServer(object):
                     socket.AF_INET6, socket.SOCK_STREAM)
                 if local_v4.connect_ex((host, port)) == 0:
                     app.sendall(b'1')
-                    self.append_log('connect {0} by ipv4'.format(host_addr))
                     self.connect_bridge(app, local_v4)
+                    if self.log_open:
+                        self.append_log(
+                            'connect {0} by ipv4'.format(host_addr))
                 elif local_v6.connect_ex((host, port)) == 0:
                     app.sendall(b'1')
-                    self.append_log('connect {0} by ipv6'.format(host_addr))
                     self.connect_bridge(app, local_v6)
+                    if self.log_open:
+                        self.append_log(
+                            'connect {0} by ipv6'.format(host_addr))
                 else:
                     app.sendall(b'0')
+                    app.close()
                     self.append_log('connect {0} failed'.format(host_addr))
             except Exception as ex:
-                self.append_log(ex, sys._getframe().f_code.co_name)
                 app.close()
+                local_v4.close()
+                local_v6.close()
+                self.append_log(ex, sys._getframe().f_code.co_name)
 
     def check_token(self, app, addr):
         if self.token == app.recv(1024):
@@ -88,6 +96,7 @@ class ProxyServer(object):
             return True
         else:
             app.sendall(b'0')
+            app.close()
             self.append_log('{0}:{1} auth failed'.format(addr[0], addr[1]))
             return False
 
@@ -107,6 +116,9 @@ class ProxyServer(object):
                     break
                 sender.sendall(data)
         except:
+            recver.close()
+            sender.close()
+        finally:
             recver.close()
             sender.close()
 

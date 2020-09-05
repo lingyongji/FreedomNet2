@@ -22,6 +22,7 @@ class ProxyClinet(object):
         self.local_port = config['local_port']
         self.all_to_vps = config['all_to_vps']
         self.vpss = config['vpss']
+        self.log_open = bool(config['log_open'])
 
     def load_hosts(self):
         self.proxy_hosts = []
@@ -63,7 +64,6 @@ class ProxyClinet(object):
 
         while True:
             app = listener.accept()
-
             app_thread = Thread(target=self.app_run, args=[app[0]])
             app_thread.setDaemon(True)
             app_thread.start()
@@ -73,11 +73,12 @@ class ProxyClinet(object):
         if len(req) == 0:
             app.close()
             return
-        host_addr = self.parse_addr(req.decode())
 
+        host_addr = self.parse_addr(req.decode())
         if not host_addr:
             app.close()
             return
+
         host = host_addr.split(':')[0]
         port = int(host_addr.split(':')[1])
 
@@ -86,7 +87,8 @@ class ProxyClinet(object):
             for ph in self.proxy_hosts:
                 if host.find(ph) > -1:
                     req_by_vps = True
-                    self.append_log('req {0} by vps'.format(host))
+                    if self.log_open:
+                        self.append_log('req {0} by vps'.format(host))
                     break
 
         if req_by_vps:
@@ -138,7 +140,8 @@ class ProxyClinet(object):
                 port = 443
 
             host_addr = '{0}:{1}'.format(host, port)
-            self.append_log('{0} parsed'.format(host_addr))
+            if self.log_open:
+                self.append_log('{0} parsed'.format(host_addr))
             return host_addr
         except Exception as ex:
             self.append_log(ex, sys._getframe().f_code.co_name)
@@ -159,6 +162,14 @@ class ProxyClinet(object):
                         proxy.sendall(host_addr.encode())
                         if proxy.recv(1) == b'1':
                             return proxy
+                        else:
+                            proxy.close()
+                            self.append_log(
+                                '{0} connect {1} failed'.format(vps_ip_port, host_addr))
+                    else:
+                        proxy.close()
+                        self.append_log(
+                            'auth {0} failed'.format(vps_ip_port))
 
     def connect_bridge(self, app, proxy, port, req):
         if port == 443:
@@ -181,6 +192,9 @@ class ProxyClinet(object):
                     break
                 sender.sendall(data)
         except:
+            recver.close()
+            sender.close()
+        finally:
             recver.close()
             sender.close()
 
