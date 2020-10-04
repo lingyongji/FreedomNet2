@@ -7,7 +7,7 @@ cd proxy/
 cat >server.config<<EOF
 {
   "v4_port": 80,
-  "v6_port": 55556,
+  "v6_port": 18080,
   "token": "admin_token",
   "log_open": true
 }
