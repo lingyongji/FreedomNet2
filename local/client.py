@@ -11,9 +11,9 @@ from win_setting import back_proxy_config, set_proxy_config
 class ProxyClinet(object):
     def __init__(self):
         self.load_config()
-        self.load_hosts()
+        self.load_urls()
         self.check_logdir()
-        self.append_log('client start')
+        self.append_log('-------client start-------')
 
     def load_config(self):
         with open('client.config', 'r') as f:
@@ -22,15 +22,15 @@ class ProxyClinet(object):
         self.service_port_v4 = config['service_port_v4']
         self.service_port_v6 = config['service_port_v6']
         self.all_to_vps = config['all_to_vps']
-        self.hosts = config['hosts']
+        self.vpss = config['vpss']
         self.log_open = bool(config['log_open'])
-        self.auto_append_hosts = bool(config['auto_append_hosts'])
+        self.auto_append_urls = bool(config['auto_append_urls'])
 
-    def load_hosts(self):
-        self.proxy_hosts = []
-        with open('hosts.txt') as f:
-            for host in f:
-                self.proxy_hosts.append(host.strip())
+    def load_urls(self):
+        self.proxy_urls = []
+        with open('urls.txt') as f:
+            for url in f:
+                self.proxy_urls.append(url.strip())
 
     def check_logdir(self):
         if not os.path.exists('log'):
@@ -43,35 +43,31 @@ class ProxyClinet(object):
         run_thread.daemon = True
         run_thread.start()
 
-        print('--FreeNet Client--')
         self.control_panel()
 
     def control_panel(self):
-        print('1.Add temp host to proxy')
-        action = input('Select an action(enter to exit): ')
-        self.select(action)
+        print('-------FreeNet Client-------')
+        print('1.Reload urls')
+        print('2.Reload config')
+        print('Press Enter to exit client.')
+        action = input('Action:')
+        self.actions(action)
 
-    def select(self, action):
+    def actions(self, action):
         match action:
+            case '1':
+                self.load_config()
+            case '2':
+                self.load_urls()
             case '':
                 self.stop()
-            case '1':
-                self.add_temp_host()
             case _:
                 print('Unkown action, select again')
                 self.control_panel()
 
-    def add_temp_host(self):
-        host = input('Input a host to proxy(enter to back): ')
-        if host == '':
-            self.control_panel()
-        else:
-            self.proxy_hosts.append(host.strip())
-            print('{0} will be proxy next time.')
-
     def stop(self):
         back_proxy_config()
-        self.append_log('client closed\n')
+        self.append_log('-------client closed-------')
         import os
         os._exit(0)
 
@@ -95,25 +91,25 @@ class ProxyClinet(object):
         except Exception as ex:
             self.append_log(ex, sys._getframe().f_code.co_name)
 
-        host_addr = self.parse_addr(req.decode(errors='ignore'))
-        if not host_addr:
+        website_addr = self.parse_addr(req.decode(errors='ignore'))
+        if not website_addr:
             app.close()
             return
 
-        host = host_addr.split(':')[0]
-        port = int(host_addr.split(':')[1])
+        domain = website_addr.split(':')[0]
+        port = int(website_addr.split(':')[1])
 
         req_by_vps = bool(self.all_to_vps)
         if not req_by_vps:
-            for ph in self.proxy_hosts:
-                if host.find(ph) > -1:
+            for ph in self.proxy_urls:
+                if domain.find(ph) > -1:
                     req_by_vps = True
                     if self.log_open:
-                        self.append_log('req {0} by vps'.format(host))
+                        self.append_log('req {0} by vps'.format(domain))
                     break
 
         if req_by_vps:
-            proxy = self.connect_proxy(host_addr)
+            proxy = self.connect_website(website_addr)
             if not proxy:
                 self.append_log('connect proxy failed')
                 return
@@ -121,17 +117,17 @@ class ProxyClinet(object):
         else:
             try:
                 local = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                if local.connect_ex((host, port)) == 0:
+                if local.connect_ex((domain, port)) == 0:
                     self.connect_bridge(app, local, port, req)
                 else:
-                    proxy = self.connect_proxy(host_addr)
+                    proxy = self.connect_website(website_addr)
                     if not proxy:
                         self.append_log('connect proxy failed')
                         return
                     self.connect_bridge(app, proxy, port, req)
-                    self.append_proxy_hosts(host)
+                    self.append_proxy_urls(domain)
             except:
-                self.append_log('get address failed => {0}'.format(host_addr))
+                self.append_log('get address failed => {0}'.format(website_addr))
 
     def parse_addr(self, req):
         try:
@@ -144,33 +140,33 @@ class ProxyClinet(object):
                 post_index = req.find('POST http')
                 if host_index > -1:
                     rn_index = req.find('\r\n', host_index)
-                    host = req[host_index+6:rn_index]
+                    website_addr = req[host_index+6:rn_index]
                 elif get_index > -1 or post_index > -1:
-                    host = req.split('/')[2]
+                    website_addr = req.split('/')[2]
                 else:
-                    self.append_log('host parsing failed => {0}'.format(req))
+                    self.append_log('website_addr parsing failed => {0}'.format(req))
                     return
 
-                host_items = host.split(':')
-                host = host_items[0]
-                if len(host_items) == 2:
-                    port = host_items[1]
+                website_items = website_addr.split(':')
+                domain = website_items[0]
+                if len(website_items) == 2:
+                    port = website_items[1]
                 else:
                     port = 80
             # https proxy
             else:
-                host = req_items[0][connect_index+8:].split(':')[0]
+                domain = req_items[0][connect_index+8:].split(':')[0]
                 port = 443
 
-            host_addr = '{0}:{1}'.format(host, port)
+            website_addr = '{0}:{1}'.format(domain, port)
             if self.log_open:
-                self.append_log('{0} parsed'.format(host_addr))
-            return host_addr
+                self.append_log('{0} parsed'.format(website_addr))
+            return website_addr
         except Exception as ex:
             self.append_log(ex, sys._getframe().f_code.co_name)
 
-    def connect_proxy(self, host_addr):
-        for vps in self.hosts:
+    def connect_website(self, website_addr):
+        for vps in self.vpss:
             if bool(vps['used']):
                 isIpv6 = vps['ip'].find(':') != -1
                 socket_family = socket.AF_INET6 if isIpv6 else socket.AF_INET
@@ -181,13 +177,13 @@ class ProxyClinet(object):
                 if proxy.connect_ex(vps_ip_port) == 0:
                     proxy.sendall(vps['password'].encode())
                     if proxy.recv(1) == b'1':
-                        proxy.sendall(host_addr.encode())
+                        proxy.sendall(website_addr.encode())
                         if proxy.recv(1) == b'1':
                             return proxy
                         else:
                             proxy.close()
                             self.append_log(
-                                '{0} connect {1} failed'.format(vps_ip_port, host_addr))
+                                '{0} connect {1} failed'.format(vps_ip_port, website_addr))
                     else:
                         proxy.close()
                         self.append_log(
@@ -220,16 +216,16 @@ class ProxyClinet(object):
             recver.close()
             sender.close()
 
-    def append_proxy_hosts(self, host):
-        if self.auto_append_hosts:
-            host_items = host.split('.')
-            host = '.'.join(host_items[-2:])
+    def append_proxy_urls(self, domain):
+        if self.auto_append_urls:
+            domian_items = domain.split('.')
+            domain = '.'.join(domian_items[-2:])
             try:
-                self.proxy_hosts.index(host)
+                self.proxy_urls.index(domain)
             except:
-                self.proxy_hosts.append(host)
-                with open('proxy_hosts.txt', 'a') as f:
-                    f.write('\n{0}'.format(host))
+                self.proxy_urls.append(domain)
+                with open('urls.txt', 'a') as f:
+                    f.write('\n{0}'.format(domain))
 
     def append_log(self, msg, func_name=''):
         dt = str(datetime.now())
