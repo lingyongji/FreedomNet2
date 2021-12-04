@@ -4,7 +4,7 @@
 #### 介绍
 FreedomNet2是一个基于python3开发的，简单的http/https的"上网"工具。
 - 
-#### Linux安装(推荐 Debian 11)
+#### Linux安装(推荐 Debian 11)(default python 3.9)
 在线(请确保已安装git)：
 - wget https://gitee.com/lingyongji/FreedomNet2/raw/master/install_online.sh && bash install_online.sh
 
@@ -12,7 +12,7 @@ FreedomNet2是一个基于python3开发的，简单的http/https的"上网"工�
 - 将install_offline_service.sh上传至服务器
 - bash install_offline_service.sh
 
-#### win本地安装clinet
+#### win本地安装clinet(python 3.10)
 - 安装python3.10 编辑此文档时最新版本为 https://www.python.org/ftp/python/3.10.0/python-3.10.0-amd64.exe
 - 请确保已安装git
 - (第一次pull)  git clone https://gitee.com/lingyongji/FreedomNet2.git
