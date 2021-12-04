@@ -18,7 +18,7 @@ class ProxyServer(object):
             config = json.load(f)
         self.v4_port = config['v4_port']
         self.v6_port = config['v6_port']
-        self.token = config['token'].encode()
+        self.password = config['password'].encode()
         self.log_open = bool(config['log_open'])
 
     def check_logdir(self):
@@ -91,7 +91,7 @@ class ProxyServer(object):
                 self.append_log(ex, sys._getframe().f_code.co_name)
 
     def check_token(self, app, addr):
-        if self.token == app.recv(1024):
+        if self.password == app.recv(1024):
             app.sendall(b'1')
             return True
         else:

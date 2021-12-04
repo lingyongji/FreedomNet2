@@ -1,14 +1,15 @@
 #!/bin/sh
 
-cd /root/
-mkdir proxy
-cd proxy/
+ufw allow 6866
+
+mkdir -p /home/FreedomNet2/server
+cd /home/FreedomNet2/server
 
 cat >server.config<<EOF
 {
-  "v4_port": 80,
-  "v6_port": 18080,
-  "token": "admin_token",
+  "v4_port": 6866,
+  "v6_port": 6868,
+  "token": "password123",
   "log_open": true
 }
 EOF
@@ -34,7 +35,7 @@ class ProxyServer(object):
             config = json.load(f)
         self.v4_port = config['v4_port']
         self.v6_port = config['v6_port']
-        self.token = config['token'].encode()
+        self.password = config['password'].encode()
         self.log_open = bool(config['log_open'])
 
     def check_logdir(self):
@@ -107,7 +108,7 @@ class ProxyServer(object):
                 self.append_log(ex, sys._getframe().f_code.co_name)
 
     def check_token(self, app, addr):
-        if self.token == app.recv(1024):
+        if self.password == app.recv(1024):
             app.sendall(b'1')
             return True
         else:
@@ -153,7 +154,7 @@ python3 server.py > log.txt 2>&1 &
 EOF
 
 cat >stop<<EOF
-eval $(ps -ef|grep "[0-9] python3 server.py"|awk '{print "kill "$2}')
+eval \$(ps -ef|grep "[0-9] python3 server.py"|awk '{print "kill "$2}')
 EOF
 
 bash run
