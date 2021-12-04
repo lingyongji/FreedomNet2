@@ -59,7 +59,7 @@ class ProxyServer(object):
             app_thread.start()
 
     def app_run(self, app, addr):
-        if self.check_token(app, addr):
+        if self.check_password(app, addr):
             host_addr = app.recv(4096).decode()
             host = host_addr.split(':')[0]
             port = int(host_addr.split(':')[1])
@@ -90,7 +90,7 @@ class ProxyServer(object):
                 local_v6.close()
                 self.append_log(ex, sys._getframe().f_code.co_name)
 
-    def check_token(self, app, addr):
+    def check_password(self, app, addr):
         if self.password == app.recv(1024):
             app.sendall(b'1')
             return True
