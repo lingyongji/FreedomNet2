@@ -11,7 +11,7 @@ from win_setting import back_proxy_config, set_proxy_config
 class ProxyClinet(object):
     def __init__(self):
         self.load_config()
-        self.load_urls()
+        self.load_proxy_urls()
         self.check_logdir()
         self.append_log('-------client start-------')
 
@@ -26,11 +26,14 @@ class ProxyClinet(object):
         self.log_open = bool(config['log_open'])
         self.auto_append_urls = bool(config['auto_append_urls'])
 
-    def load_urls(self):
-        self.proxy_urls = []
-        with open('urls.txt') as f:
+    def load_proxy_urls(self):
+        self.proxy_urls_default = []
+        with open('proxy_urls_default.txt') as f:
             for url in f:
-                self.proxy_urls.append(url.strip())
+                self.proxy_urls_default.append(url.strip())                
+        with open('proxy_urls_append.txt') as f:
+            for url in f:
+                self.proxy_urls_default.append(url.strip())
 
     def check_logdir(self):
         if not os.path.exists('log'):
@@ -47,7 +50,7 @@ class ProxyClinet(object):
 
     def control_panel(self):
         print('-------FreeNet Client-------')
-        print('1.Reload urls')
+        print('1.Reload proxy urls')
         print('2.Reload config')
         print('Press Enter to exit client.')
         action = input('Action:')
@@ -56,14 +59,14 @@ class ProxyClinet(object):
     def actions(self, action):
         match action:
             case '1':
-                self.load_config()
+                self.load_proxy_urls()
             case '2':
-                self.load_urls()
+                self.load_config()
             case '':
                 self.stop()
             case _:
                 print('Unkown action, select again')
-                self.control_panel()
+        self.control_panel()
 
     def stop(self):
         back_proxy_config()
@@ -101,8 +104,8 @@ class ProxyClinet(object):
 
         req_by_vps = bool(self.all_to_vps)
         if not req_by_vps:
-            for ph in self.proxy_urls:
-                if domain.find(ph) > -1:
+            for proxy_host in self.proxy_urls_default:
+                if domain.find(proxy_host) > -1:
                     req_by_vps = True
                     if self.log_open:
                         self.append_log('req {0} by vps'.format(domain))
@@ -125,7 +128,9 @@ class ProxyClinet(object):
                         self.append_log('connect proxy failed')
                         return
                     self.connect_bridge(app, proxy, port, req)
-                    self.append_proxy_urls(domain)
+                    
+                    if self.auto_append_urls:
+                        self.append_proxy_urls(domain)
             except:
                 self.append_log('get address failed => {0}'.format(website_addr))
 
@@ -217,15 +222,14 @@ class ProxyClinet(object):
             sender.close()
 
     def append_proxy_urls(self, domain):
-        if self.auto_append_urls:
-            domian_items = domain.split('.')
-            domain = '.'.join(domian_items[-2:])
-            try:
-                self.proxy_urls.index(domain)
-            except:
-                self.proxy_urls.append(domain)
-                with open('urls.txt', 'a') as f:
-                    f.write('\n{0}'.format(domain))
+        domian_items = domain.split('.')
+        domain = '.'.join(domian_items[-2:])
+        try:
+            self.proxy_urls_default.index(domain)
+        except:
+            self.proxy_urls_default.append(domain)
+            with open('proxy_urls_append.txt', 'a') as f:
+                f.write('\n{0}'.format(domain))
 
     def append_log(self, msg, func_name=''):
         dt = str(datetime.now())
