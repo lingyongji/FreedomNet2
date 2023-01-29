@@ -2,6 +2,7 @@ import json
 import os
 import socket
 import sys
+import win32api
 from datetime import datetime
 from threading import Thread
 
@@ -13,7 +14,7 @@ class ProxyClinet(object):
         self.load_config()
         self.load_proxy_urls()
         self.check_logdir()
-        self.append_log('-------client start-------')
+        append_log('-------client start-------')
 
     def load_config(self):
         with open('client.config', 'r') as f:
@@ -30,7 +31,7 @@ class ProxyClinet(object):
         self.proxy_urls_default = []
         with open('proxy_urls_default.txt') as f:
             for url in f:
-                self.proxy_urls_default.append(url.strip())                
+                self.proxy_urls_default.append(url.strip())
         with open('proxy_urls_append.txt') as f:
             for url in f:
                 self.proxy_urls_default.append(url.strip())
@@ -52,7 +53,6 @@ class ProxyClinet(object):
         print('-------FreeNet Client-------')
         print('1.Reload proxy urls')
         print('2.Reload config')
-        print('Press Enter to exit client.')
         action = input('Action:')
         self.actions(action)
 
@@ -62,17 +62,9 @@ class ProxyClinet(object):
                 self.load_proxy_urls()
             case '2':
                 self.load_config()
-            case '':
-                self.stop()
             case _:
                 print('Unkown action, select again')
         self.control_panel()
-
-    def stop(self):
-        back_proxy_config()
-        self.append_log('-------client closed-------')
-        import os
-        os._exit(0)
 
     def run_listen(self):
         listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -92,7 +84,7 @@ class ProxyClinet(object):
                 app.close()
                 return
         except Exception as ex:
-            self.append_log(ex, sys._getframe().f_code.co_name)
+            append_log(ex, sys._getframe().f_code.co_name)
 
         website_addr = self.parse_addr(req.decode(errors='ignore'))
         if not website_addr:
@@ -108,13 +100,13 @@ class ProxyClinet(object):
                 if domain.find(proxy_host) > -1:
                     req_by_vps = True
                     if self.log_open:
-                        self.append_log('req {0} by vps'.format(domain))
+                        append_log('req {0} by vps'.format(domain))
                     break
 
         if req_by_vps:
             proxy = self.connect_website(website_addr)
             if not proxy:
-                self.append_log('connect proxy failed')
+                append_log('connect proxy failed')
                 return
             self.connect_bridge(app, proxy, port, req)
         else:
@@ -125,14 +117,14 @@ class ProxyClinet(object):
                 else:
                     proxy = self.connect_website(website_addr)
                     if not proxy:
-                        self.append_log('connect proxy failed')
+                        append_log('connect proxy failed')
                         return
                     self.connect_bridge(app, proxy, port, req)
-                    
+
                     if self.auto_append_urls:
                         self.append_proxy_urls(domain)
             except:
-                self.append_log('get address failed => {0}'.format(website_addr))
+                append_log('get address failed => {0}'.format(website_addr))
 
     def parse_addr(self, req):
         try:
@@ -149,7 +141,8 @@ class ProxyClinet(object):
                 elif get_index > -1 or post_index > -1:
                     website_addr = req.split('/')[2]
                 else:
-                    self.append_log('website_addr parsing failed => {0}'.format(req))
+                    append_log(
+                        'website_addr parsing failed => {0}'.format(req))
                     return
 
                 website_items = website_addr.split(':')
@@ -165,10 +158,10 @@ class ProxyClinet(object):
 
             website_addr = '{0}:{1}'.format(domain, port)
             if self.log_open:
-                self.append_log('{0} parsed'.format(website_addr))
+                append_log('{0} parsed'.format(website_addr))
             return website_addr
         except Exception as ex:
-            self.append_log(ex, sys._getframe().f_code.co_name)
+            append_log(ex, sys._getframe().f_code.co_name)
 
     def connect_website(self, website_addr):
         for vps in self.vpss:
@@ -187,11 +180,11 @@ class ProxyClinet(object):
                             return proxy
                         else:
                             proxy.close()
-                            self.append_log(
+                            append_log(
                                 '{0} connect {1} failed'.format(vps_ip_port, website_addr))
                     else:
                         proxy.close()
-                        self.append_log(
+                        append_log(
                             'auth {0} failed'.format(vps_ip_port))
 
     def connect_bridge(self, app, proxy, port, req):
@@ -231,11 +224,18 @@ class ProxyClinet(object):
             with open('proxy_urls_append.txt', 'a') as f:
                 f.write('\n{0}'.format(domain))
 
-    def append_log(self, msg, func_name=''):
-        dt = str(datetime.now())
-        with open('log/{0}_proxy.log'.format(dt[0:10]), 'a') as f:
-            f.write('{0} | {1} | {2} \n'.format(dt, str(msg), func_name))
+
+def append_log(msg, func_name=''):
+    dt = str(datetime.now())
+    with open('log/{0}.log'.format(dt[0:10]), 'a') as f:
+        f.write('{0} | {1} | {2} \n'.format(dt, str(msg), func_name))
 
 
 if __name__ == "__main__":
+    def on_exit(sig):
+        back_proxy_config()
+        append_log('-------client closed-------')
+
+    win32api.SetConsoleTitle("FreedomNet2")
+    win32api.SetConsoleCtrlHandler(on_exit, True)
     ProxyClinet().run()

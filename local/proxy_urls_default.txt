@@ -8,9 +8,11 @@ youtube.com
 ytimg.com
 gstatic.com
 ggpht.com
+imgur.com
 steamcommunity.com
 steamstatic.com
 steampowered.com
 wikipedia.org
-github.com
 gravatar.com
+github.com
+githubusercontent.com
