@@ -141,7 +141,7 @@ class ProxyServer(object):
 
     def append_log(self, msg, func_name=''):
         dt = str(datetime.now())
-        with open('log/{0}_proxy.log'.format(dt[0:10]), 'a') as f:
+        with open('log/{0}.log'.format(dt[0:10]), 'a') as f:
             f.write('{0} | {1} | {2} \n'.format(dt, str(msg), func_name))
 
 
