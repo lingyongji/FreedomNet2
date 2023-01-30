@@ -154,7 +154,7 @@ python3 server.py > log.txt 2>&1 &
 EOF
 
 cat >stop<<EOF
-eval \$(ps -ef|grep "[0-9] python3 server.py"|awk '{print "kill "$2}')
+eval \$(ps -ef|grep "[0-9] python3 server.py"|awk '{print "kill "\$2}')
 EOF
 
 bash run
