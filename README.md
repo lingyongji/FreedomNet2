@@ -6,36 +6,36 @@ FreedomNet2是一个基于python3开发的，简单的http/https的"上网"工�
 - 
 #### Linux安装service(推荐 Debian 11)(default python 3.9)
 在线(请确保已安装git)：
-- wget https://github.com/lingyongji/FreedomNet2/blob/master/install_online_service.sh && bash install_online_service.sh
+- ```wget https://github.com/lingyongji/FreedomNet2/blob/master/install_online_service.sh && bash install_online_service.sh```
 
 离线：（某些vps无法访问git的情况下 ipv6 only）
-- 将 https://github.com/lingyongji/FreedomNet2/blob/master/install_offline_service.sh 上传至服务器任意文件夹，cd至该文件夹
-- bash install_offline_service.sh
+- 下载 ```https://github.com/lingyongji/FreedomNet2/blob/master/install_offline_service.sh``` 脚本，上传至服务器
+- 在脚本所在路径下执行 ```bash install_offline_service.sh``` 命令
 
 #### win本地安装clinet(python 3.10)
 - 安装python3.10 编辑此文档时最新版本为 https://www.python.org/ftp/python/3.10.0/python-3.10.0-amd64.exe
 - 请确保本地win已安装git
-- (第一次clone)  git clone https://github.com/lingyongji/FreedomNet2.git
-- (已经clone过)  git pull
+- (第一次clone) ```git clone https://github.com/lingyongji/FreedomNet2.git```
+- (已经clone过) ```git pull```
 
 #### 使用说明
 Linux server端 安装既运行
-- 停止：bash stop
-- 运行：bash run
+- 停止：```bash stop```
+- 运行：```bash run```
 
 Windows client端
 - 运行：双击 clinet.py
-- 还原配置(若有异常退出的情况)：请双击 local/win_setting.py 还原系统proxy配置
+- 还原配置(若有异常退出的情况)：请双击 ```local/win_setting.py``` 还原系统proxy配置
 
 #### 配置文件说明
-代理列表 local/proxy_urls_default.txt
+代理列表 ```local/proxy_urls_default.txt```
 - 运行工具前添加想要走代理的站点顶级域名
 
-追加代理列表 local/proxy_urls_append.txt
-- 本文件会随着工具运行自动追加本地不能访问的站点顶级域名(可配置开关 local/client.config - auto_append_urls)
+追加代理列表 ```local/proxy_urls_append.txt```
+- 本文件会随着工具运行自动追加本地不能访问的站点顶级域名(可配置开关 ```local/client.config - auto_append_urls```)
 - 这里因为有强迫症，所以追加列表单独记录
 
-客户端配置 local/client.config
+客户端配置 ```local/client.config```
 ```
 {
   "local_port": 16866,           -- 本地监听端口
@@ -59,7 +59,7 @@ Windows client端
 }
 ```
 
-服务器配置 server/server.config
+服务器配置 ```server/server.config```
 ```
 {
   "v4_port": 6866,               -- 监听端口(ipv4)
