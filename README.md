@@ -15,8 +15,8 @@ FreedomNet2是一个基于python3开发的，简单的http/https的"上网"工�
 #### win本地安装clinet(python 3.10)
 - 安装python3.10 编辑此文档时最新版本为 https://www.python.org/ftp/python/3.10.0/python-3.10.0-amd64.exe
 - 请确保本地win已安装git
-- (第一次clone) ```git clone https://github.com/lingyongji/FreedomNet2.git```
-- (已经clone过) ```git pull```
+- 安装：```git clone https://github.com/lingyongji/FreedomNet2.git```
+- 更新：```git pull```
 
 #### 使用说明
 Linux server端 安装既运行
@@ -24,7 +24,7 @@ Linux server端 安装既运行
 - 运行：```bash run```
 
 Windows client端
-- 运行：双击 clinet.py
+- 运行：双击 ```clinet.py```
 - 还原配置(若有异常退出的情况)：请双击 ```local/win_setting.py``` 还原系统proxy配置
 
 #### 配置文件说明
