@@ -1,14 +1,17 @@
-# python 3.10
+# python 3.10+
 
 import json
 import os
 import socket
 import sys
 import win32api
+import platform
 from datetime import datetime
 from threading import Thread
+from proxy_setting_win import back_config as win_back_config, set_config as win_set_config
+from proxy_setting_linux import back_config as linux_back_config, set_config as linux_set_config
 
-from win_setting import back_proxy_config, set_proxy_config
+os_name = platform.system().lower()
 
 
 class ProxyClinet(object):
@@ -233,11 +236,30 @@ def append_log(msg, func_name=''):
         f.write('{0} | {1} | {2} \n'.format(dt, str(msg), func_name))
 
 
+def set_proxy_config(port):
+    if os_name == 'windows':
+        win_set_config(port)
+    elif os_name == 'linux':
+        linux_set_config(port)
+
+
+def back_proxy_config():
+    if os_name == 'windows':
+        win_back_config()
+    elif os_name == 'linux':
+        linux_back_config()
+
+
 if __name__ == "__main__":
     def on_exit(sig):
         back_proxy_config()
         append_log('-------client closed-------')
 
-    win32api.SetConsoleTitle("FreedomNet2")
-    win32api.SetConsoleCtrlHandler(on_exit, True)
+    if os_name == 'windows':
+        win32api.SetConsoleTitle("FreedomNet2")
+        win32api.SetConsoleCtrlHandler(on_exit, True)
+    elif os_name == 'linux':
+        # todo
+        pass
+
     ProxyClinet().run()

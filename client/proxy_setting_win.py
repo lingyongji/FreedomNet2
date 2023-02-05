@@ -5,7 +5,7 @@ INTERNET_OPTION_SETTINGS_CHANGED = 39
 INTERNET_OPTION_REFRESH = 37
 
 
-def set_proxy_config(port):
+def set_config(port):
     host = 'localhost:{0}'.format(str(port))
     try:
         with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'Software\Microsoft\Windows\CurrentVersion\Internet Settings', 0, winreg.KEY_WRITE) as key:
@@ -16,7 +16,7 @@ def set_proxy_config(port):
         print(ex)
 
 
-def back_proxy_config():
+def back_config():
     try:
         with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'Software\Microsoft\Windows\CurrentVersion\Internet Settings', 0, winreg.KEY_WRITE) as key:
             winreg.SetValueEx(key, 'ProxyEnable', 0, winreg.REG_DWORD, 0)
@@ -33,4 +33,4 @@ def refresh():
 
 
 if __name__ == '__main__':
-    back_proxy_config()
+    back_config()
