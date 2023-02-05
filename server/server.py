@@ -3,7 +3,6 @@
 import json
 import os
 import socket
-import sys
 import time
 from datetime import datetime
 from threading import Thread
@@ -13,38 +12,22 @@ class ProxyServer(object):
     def __init__(self):
         self.load_config()
         self.check_logdir()
-        self.append_log('proxy start')
+        self.append_log('-------proxy start-------')
 
     def load_config(self):
         with open('server.config', 'r') as f:
             config = json.load(f)
-        self.v4_port = config['v4_port']
-        self.v6_port = config['v6_port']
+        self.service_port = config['service_port']
         self.password = config['password'].encode()
-        self.log_open = bool(config['log_open'])
 
     def check_logdir(self):
         if not os.path.exists('log'):
             os.mkdir('log')
 
     def run(self):
-        try:
-            proxy_v4 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            proxy_v4.bind(('0.0.0.0', self.v4_port))
-            v4_app = Thread(target=self.proxy_run, args=[proxy_v4])
-            v4_app.setDaemon(True)
-            v4_app.start()
-        except Exception as ex:
-            self.append_log(ex, sys._getframe().f_code.co_name)
-
-        try:
-            proxy_v6 = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
-            proxy_v6.bind(('::', self.v6_port))
-            v6_app = Thread(target=self.proxy_run, args=[proxy_v6])
-            v6_app.setDaemon(True)
-            v6_app.start()
-        except Exception as ex:
-            self.append_log(ex, sys._getframe().f_code.co_name)
+        app = Thread(target=self.proxy_listen)
+        app.setDaemon(True)
+        app.start()
 
         hours = 1
         while True:
@@ -52,8 +35,9 @@ class ProxyServer(object):
             self.append_log('proxy run {0} hour(s)'.format(hours))
             hours += 1
 
-    def proxy_run(self, proxy):
-        proxy.listen(20)
+    def proxy_listen(self):
+        proxy = socket.create_server(
+            ('', self.service_port), family=socket.AF_INET6, backlog=128, dualstack_ipv6=True)
         while True:
             client, addr = proxy.accept()
             app_thread = Thread(target=self.app_run, args=[client, addr])
@@ -65,32 +49,19 @@ class ProxyServer(object):
             host_addr = app.recv(4096).decode()
             host = host_addr.split(':')[0]
             port = int(host_addr.split(':')[1])
+            proxy = None
             try:
-                local_v4 = socket.socket(
-                    socket.AF_INET, socket.SOCK_STREAM)
-                local_v6 = socket.socket(
-                    socket.AF_INET6, socket.SOCK_STREAM)
-                if local_v4.connect_ex((host, port)) == 0:
-                    app.sendall(b'1')
-                    self.connect_bridge(app, local_v4)
-                    if self.log_open:
-                        self.append_log(
-                            'connect {0} by ipv4'.format(host_addr))
-                elif local_v6.connect_ex((host, port)) == 0:
-                    app.sendall(b'1')
-                    self.connect_bridge(app, local_v6)
-                    if self.log_open:
-                        self.append_log(
-                            'connect {0} by ipv6'.format(host_addr))
-                else:
-                    app.sendall(b'0')
-                    app.close()
-                    self.append_log('connect {0} failed'.format(host_addr))
+                proxy = socket.create_connection((host, port))
+                app.sendall(b'1')
+                self.append_log('connect to ' + host)
+                self.connect_bridge(app, proxy)
             except Exception as ex:
+                app.sendall(b'0')
                 app.close()
-                local_v4.close()
-                local_v6.close()
-                self.append_log(ex, sys._getframe().f_code.co_name)
+                if proxy:
+                    proxy.close()
+                self.append_log(
+                    'connect to {0} failed - {1}'.format(host, str(ex)))
 
     def check_password(self, app, addr):
         if self.password == app.recv(1024):
@@ -99,7 +70,7 @@ class ProxyServer(object):
         else:
             app.sendall(b'0')
             app.close()
-            self.append_log('{0}:{1} auth failed'.format(addr[0], addr[1]))
+            self.append_log('{0} auth failed'.format(addr))
             return False
 
     def connect_bridge(self, app, proxy):

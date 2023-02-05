@@ -39,8 +39,8 @@ Windows client端
 ```
 {
   "local_port": 16866,           -- 本地监听端口
+  "service_port": 6866,          -- 服务器端口
   "all_to_vps": false,           -- 是否所有流量走service服务
-  "log_open": true,              -- 日志开关（true-全开，false-仅记录报错）  
   "auto_append_urls": true,      -- 是否开启自动追加host（对应local/proxy_urls_append.txt文件）
   "hosts": [
     {
@@ -53,18 +53,14 @@ Windows client端
       "password": "password123",
       "ip": "::",                -- vps的ip(v6)
     }
-  ],
-  "service_port_v4": 6866,       -- ipv4端口
-  "service_port_v6": 6866        -- ipv6端口
+  ]
 }
 ```
 
 服务器配置 ```server/server.config```
 ```
 {
-  "v4_port": 6866,               -- 监听端口(ipv4)
-  "v6_port": 6868,               -- 监听端口(ipv6)
-  "password": "password123",     -- 密码
-  "log_open": true               -- 日志开关（true-全开，false-仅记录报错）
+  "service_port": 6866,          -- 监听端口(ipv4)
+  "password": "password123"      -- 密码
 }
 ```
