@@ -12,8 +12,8 @@ FreedomNet2是一个基于python3开发的，简单的http/https的"上网"工�
 - 下载 ```https://github.com/lingyongji/FreedomNet2/blob/master/install_offline_service.sh``` 脚本，上传至服务器
 - 在脚本所在路径下执行 ```bash install_offline_service.sh``` 命令
 
-#### win本地安装clinet(python 3.10)
-- 安装python3.10 编辑此文档时最新版本为 https://www.python.org/ftp/python/3.10.0/python-3.10.0-amd64.exe
+#### win本地安装clinet(python 3.10+)
+- 安装python3.10 此文档基于 https://www.python.org/ftp/python/3.10.0/python-3.10.0-amd64.exe
 - 请确保本地win已安装git
 - 安装：```git clone https://github.com/lingyongji/FreedomNet2.git```
 - 更新：```git pull```
@@ -28,14 +28,14 @@ Windows client端
 - 还原配置(若有异常退出的情况)：请双击 ```local/win_setting.py``` 还原系统proxy配置
 
 #### 配置文件说明
-代理列表 ```local/proxy_urls_default.txt```
+代理列表 ```client/proxy_urls_default.txt```
 - 运行工具前添加想要走代理的站点顶级域名
 
-追加代理列表 ```local/proxy_urls_append.txt```
-- 本文件会随着工具运行自动追加本地不能访问的站点顶级域名(可配置开关 ```local/client.config - auto_append_urls```)
+追加代理列表 ```client/proxy_urls_append.txt```
+- 本文件会随着工具运行自动追加本地不能访问的站点顶级域名(可配置开关 ```client/client.config - auto_append_urls```)
 - 这里因为有强迫症，所以追加列表单独记录
 
-客户端配置 ```local/client.config```
+客户端配置 ```client/client.config```
 ```
 {
   "local_port": 16866,           -- 本地监听端口
