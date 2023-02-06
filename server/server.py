@@ -12,7 +12,7 @@ class ProxyServer(object):
     def __init__(self):
         self.load_config()
         self.check_logdir()
-        self.append_log('\n-------proxy start-------')
+        self.append_log('\n--------proxy start-------')
 
     def load_config(self):
         with open('server.config', 'r') as f:
