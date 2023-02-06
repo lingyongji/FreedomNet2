@@ -25,7 +25,7 @@ Linux server端 安装既运行
 
 Windows client端
 - 运行：双击 ```clinet.py```
-- 还原配置(若有异常退出的情况)：请双击 ```local/win_setting.py``` 还原系统proxy配置
+- 还原配置(若有异常退出的情况)：请双击 ```client/win_setting.py``` 还原系统proxy配置
 
 #### 配置文件说明
 代理列表 ```client/proxy_urls_default.txt```
@@ -39,8 +39,9 @@ Windows client端
 ```
 {
   "local_port": 16866,           -- 本地监听端口
+  "service_port": 6866,          -- 服务器端口
   "all_to_vps": false,           -- 是否所有流量走service服务
-  "log_open": true,              -- 日志开关（true-全开，false-仅记录报错）  
+  "log_open": true,              -- 日志开关（true-全开，false-仅记录报错）
   "auto_append_urls": true,      -- 是否开启自动追加host（对应local/proxy_urls_append.txt文件）
   "hosts": [
     {
@@ -53,17 +54,14 @@ Windows client端
       "password": "password123",
       "ip": "::",                -- vps的ip(v6)
     }
-  ],
-  "service_port_v4": 6866,       -- ipv4端口
-  "service_port_v6": 6866        -- ipv6端口
+  ]
 }
 ```
 
 服务器配置 ```server/server.config```
 ```
 {
-  "v4_port": 6866,               -- 监听端口(ipv4)
-  "v6_port": 6868,               -- 监听端口(ipv6)
+  "service_port": 6866,          -- 监听端口(ipv4)
   "password": "password123",     -- 密码
   "log_open": true               -- 日志开关（true-全开，false-仅记录报错）
 }
