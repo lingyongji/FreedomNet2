@@ -19,6 +19,7 @@ class ProxyServer(object):
             config = json.load(f)
         self.service_port = config['service_port']
         self.password = config['password'].encode()
+        self.log_open = config['log_open']
 
     def check_logdir(self):
         if not os.path.exists('log'):
@@ -53,7 +54,8 @@ class ProxyServer(object):
             try:
                 proxy = socket.create_connection((host, port))
                 app.sendall(b'1')
-                self.append_log('connect to ' + host)
+                if self.log_open:
+                    self.append_log('connect to ' + host)
                 self.connect_bridge(app, proxy)
             except Exception as ex:
                 app.sendall(b'0')

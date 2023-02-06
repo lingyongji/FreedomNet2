@@ -25,6 +25,7 @@ class ProxyClinet(object):
         self.local_port = config['local_port']
         self.service_port = config['service_port']
         self.all_to_vps = config['all_to_vps']
+        self.log_open = config['log_open']
         self.vpss = config['vpss']
         self.auto_append_urls = bool(config['auto_append_urls'])
 
@@ -100,7 +101,8 @@ class ProxyClinet(object):
             for proxy_host in self.proxy_urls_default:
                 if domain.find(proxy_host) > -1:
                     req_by_vps = True
-                    append_log('request {0} by vps'.format(domain))
+                    if self.log_open:
+                        append_log('request {0} by vps'.format(domain))
                     break
 
         if req_by_vps:
@@ -160,7 +162,8 @@ class ProxyClinet(object):
                 port = 443
 
             website_addr = '{0}:{1}'.format(domain, port)
-            append_log('{0} parsed'.format(website_addr))
+            if self.log_open:
+                append_log('{0} parsed'.format(website_addr))
             return website_addr
         except Exception as ex:
             append_log('parse addr failed - ' + str(ex))
