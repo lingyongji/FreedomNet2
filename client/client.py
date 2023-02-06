@@ -17,7 +17,7 @@ class ProxyClinet(object):
         self.load_config()
         self.load_proxy_urls()
         self.check_logdir()
-        append_log('-------client start-------')
+        append_log('\n-------client start-------')
 
     def load_config(self):
         with open('client.config', 'r') as f:
