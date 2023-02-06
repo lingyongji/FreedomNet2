@@ -19,7 +19,7 @@ class ProxyServer(object):
             config = json.load(f)
         self.service_port = config['service_port']
         self.password = config['password'].encode()
-        self.log_open = config['log_open']
+        self.log_open = bool(config['log_open'])
 
     def check_logdir(self):
         if not os.path.exists('log'):

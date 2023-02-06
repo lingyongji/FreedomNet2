@@ -25,8 +25,8 @@ class ProxyClinet(object):
         self.local_port = config['local_port']
         self.service_port = config['service_port']
         self.all_to_vps = config['all_to_vps']
-        self.log_open = config['log_open']
         self.vpss = config['vpss']
+        self.log_open = bool(config['log_open'])
         self.auto_append_urls = bool(config['auto_append_urls'])
 
     def load_proxy_urls(self):
