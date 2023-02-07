@@ -25,7 +25,7 @@ Linux server端 安装既运行
 
 Windows client端
 - 运行：双击 ```clinet.py```
-- 还原配置(若有异常退出的情况)：请双击 ```client/win_setting.py``` 还原系统proxy配置
+- 还原配置(若有异常退出的情况)：请双击 ```client/proxy_setting_win.py``` 还原系统proxy配置
 
 #### 配置文件说明
 代理列表 ```client/proxy_urls_default.txt```
