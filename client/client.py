@@ -84,7 +84,7 @@ class ProxyClinet(object):
                 app.close()
                 return
         except Exception as ex:
-            append_log('recv request failed - ' + str(ex))
+            append_log('recv request failed - {0}'.format(ex))
             return
 
         website_addr = self.parse_addr(req.decode(errors='ignore'))
@@ -166,7 +166,7 @@ class ProxyClinet(object):
                 append_log('{0} parsed'.format(website_addr))
             return website_addr
         except Exception as ex:
-            append_log('parse addr failed - ' + str(ex))
+            append_log('parse addr failed - {0}'.format(ex))
 
     def connect_website_by_proxy(self, website_addr):
         host = website_addr.split(':')[0]
@@ -188,14 +188,19 @@ class ProxyClinet(object):
                         proxy.close()
                         append_log('auth {0} failed'.format(vps_addr))
                 except Exception as ex:
-                    append_log('connect {0} failed'.format(vps_addr))
+                    append_log('connect {0} failed - {1}'.format(vps_addr, ex))
         append_log('connect {0} by all proxy failed'.format(host))
 
     def connect_bridge(self, app, proxy, port, req):
-        if port == 443:
-            app.sendall(b'HTTP/1.0 200 Connection Established\r\n\r\n')
-        else:
-            proxy.sendall(req)
+        try:
+            if port == 443:
+                app.sendall(b'HTTP/1.0 200 Connection Established\r\n\r\n')
+            else:
+                proxy.sendall(req)
+        except Exception as ex:
+            append_log(
+                'create bridge failed - {0} | app => {1} | proxy => {2}'.format(ex, app, proxy))
+            return
 
         a2p = Thread(target=self.bridge, args=[app, proxy])
         p2a = Thread(target=self.bridge, args=[proxy, app])

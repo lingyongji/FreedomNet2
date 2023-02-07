@@ -63,7 +63,7 @@ class ProxyServer(object):
                 if proxy:
                     proxy.close()
                 self.append_log(
-                    'connect to {0} failed - {1}'.format(host, str(ex)))
+                    'connect to {0} failed - {1}'.format(host, ex))
 
     def check_password(self, app, addr):
         if self.password == app.recv(1024):
