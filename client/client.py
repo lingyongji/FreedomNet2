@@ -4,6 +4,7 @@ import json
 import os
 import socket
 import platform
+import atexit
 from datetime import datetime
 from threading import Thread
 from proxy_setting_win import back_config as win_back_config, set_config as win_set_config
@@ -17,7 +18,7 @@ class ProxyClinet(object):
         self.load_config()
         self.load_proxy_urls()
         self.check_logdir()
-        append_log('\n-------client start-------')
+        append_log('\n------ client start ------')
 
     def load_config(self):
         with open('client.config', 'r') as f:
@@ -52,9 +53,10 @@ class ProxyClinet(object):
         self.control_panel()
 
     def control_panel(self):
-        print('-------FreeNet Client-------')
+        print('------ FreeNet Client ------')
         print('1.Reload proxy urls')
         print('2.Reload config')
+        print('------ Ctrl+C to exit ------')
         action = input('Action:')
         self.actions(action)
 
@@ -62,8 +64,10 @@ class ProxyClinet(object):
         match action:
             case '1':
                 self.load_proxy_urls()
+                print('proxy urls reloaded')
             case '2':
                 self.load_config()
+                print('config reloaded')
             case _:
                 print('Unkown action, select again')
         self.control_panel()
@@ -255,16 +259,9 @@ def back_proxy_config():
 
 
 if __name__ == "__main__":
-    def on_exit(sig):
+    def before_exit():
         back_proxy_config()
-        append_log('-------client closed-------')
+        append_log('------ client closed ------')
 
-    if os_name == 'windows':
-        import win32api
-        win32api.SetConsoleTitle("FreedomNet2")
-        win32api.SetConsoleCtrlHandler(on_exit, True)
-    elif os_name == 'linux':
-        # todo
-        pass
-
+    atexit.register(before_exit)
     ProxyClinet().run()
